@@ -70,7 +70,7 @@ func (h *Handler) GetAllPhotos(c *gin.Context) {
 	var photos []models.Photo
 
 	// Query all photos from database
-	err := h.db.Select(&photos, "SELECT id, url FROM photos")
+	err := h.db.Select(&photos, "SELECT id, url FROM photos ORDER BY RANDOM() LIMIT 10")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch photos"})
 		return
