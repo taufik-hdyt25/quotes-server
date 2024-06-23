@@ -19,16 +19,14 @@ func main() {
 	}
 
 	router := gin.Default()
-	// Setup CORS middleware
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:8080", "https://quotes-server-i1tq.onrender.com"}, // Ganti dengan origin yang sesuai
+		AllowAllOrigins:  true,
 		AllowMethods:     []string{"GET", "POST"},
 		AllowHeaders:     []string{"Origin", "Content-Type"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
-
 	db := utils.SetupDB()
 	handler := handlers.NewHandler(db)
 
