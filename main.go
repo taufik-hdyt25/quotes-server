@@ -32,6 +32,7 @@ func main() {
 
 	router.POST("/upload", handler.UploadPhoto)
 	router.GET("/photos", handler.GetAllPhotos)
+	router.DELETE("/photo/:id", handler.DeletePhoto)
 
 	router.Run(":8080")
 }

@@ -78,3 +78,27 @@ func (h *Handler) GetAllPhotos(c *gin.Context) {
 
 	c.JSON(http.StatusOK, photos)
 }
+
+func (h *Handler) DeletePhoto(c *gin.Context) {
+	id := c.Param("id")
+
+	// Execute delete query
+	result, err := h.db.Exec("DELETE FROM photos WHERE id = $1", id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete photo"})
+		return
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve affected rows"})
+		return
+	}
+
+	if rowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Photo not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Photo deleted successfully"})
+}
