@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"os"
+	"strconv"
 
 	"go-photo-upload/models"
 
@@ -69,14 +70,45 @@ func (h *Handler) UploadPhoto(c *gin.Context) {
 func (h *Handler) GetAllPhotos(c *gin.Context) {
 	var photos []models.Photo
 
-	// Query all photos from database
-	err := h.db.Select(&photos, "SELECT id, url FROM photos ORDER BY RANDOM() LIMIT 10")
+	// Default limit and page values
+	limit := 10
+	page := 1
+
+	// Get limit and page from query parameters
+	if l, err := strconv.Atoi(c.Query("limit")); err == nil {
+		limit = l
+	}
+	if p, err := strconv.Atoi(c.Query("page")); err == nil {
+		page = p
+	}
+
+	offset := (page - 1) * limit
+
+	// Query photos from the database with limit and offset for pagination
+	err := h.db.Select(&photos, "SELECT id, url FROM photos ORDER BY RANDOM() LIMIT $1 OFFSET $2", limit, offset)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch photos"})
 		return
 	}
 
-	c.JSON(http.StatusOK, photos)
+	// Check if there are more photos for the next page
+	var nextPhotos []models.Photo
+	err = h.db.Select(&nextPhotos, "SELECT id, url FROM photos ORDER BY RANDOM() LIMIT 1 OFFSET $1", offset+limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check for next page"})
+		return
+	}
+
+	nextPage := 0
+	if len(nextPhotos) > 0 {
+		nextPage = page + 1
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"current_page": page,
+		"next_page":    nextPage,
+		"photos":       photos,
+	})
 }
 
 func (h *Handler) DeletePhoto(c *gin.Context) {
